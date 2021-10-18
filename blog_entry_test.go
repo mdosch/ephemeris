@@ -9,9 +9,12 @@ import (
 func TestMissingBlog(t *testing.T) {
 
 	// fake-site
-	site := New("", "")
+	site, err := New("", "", "")
+	if err != nil {
+		t.Fatalf("error creating site: %s", err.Error())
+	}
 
-	_, err := NewBlogEntry("_test/file/is/not/present", site)
+	_, err = NewBlogEntry("_test/file/is/not/present", site)
 	if err == nil {
 		t.Errorf("expected error reading a missing file, got none")
 	}
@@ -21,7 +24,10 @@ func TestMissingBlog(t *testing.T) {
 func TestValidBlog(t *testing.T) {
 
 	// fake-site
-	site := New("", "")
+	site, err := New("", "", "")
+	if err != nil {
+		t.Fatalf("error creating site: %s", err.Error())
+	}
 
 	b, err := NewBlogEntry("_test/blog_entry/1.txt", site)
 	if err != nil {
@@ -39,9 +45,12 @@ func TestValidBlog(t *testing.T) {
 func TestBogusBlogDate(t *testing.T) {
 
 	// fake-site
-	site := New("", "")
+	site, err := New("", "", "")
+	if err != nil {
+		t.Fatalf("error creating site: %s", err.Error())
+	}
 
-	_, err := NewBlogEntry("_test/blog_entry/bogus-date.txt", site)
+	_, err = NewBlogEntry("_test/blog_entry/bogus-date.txt", site)
 	if err == nil {
 		t.Errorf("we expected an error, but found none")
 	}
@@ -56,9 +65,12 @@ func TestBogusBlogDate(t *testing.T) {
 func TestBogusBlogHeader(t *testing.T) {
 
 	// fake-site
-	site := New("", "")
+	site, err := New("", "", "")
+	if err != nil {
+		t.Fatalf("error creating site: %s", err.Error())
+	}
 
-	_, err := NewBlogEntry("_test/blog_entry/unknown_header.txt", site)
+	_, err = NewBlogEntry("_test/blog_entry/unknown_header.txt", site)
 	if err == nil {
 		t.Errorf("we expected an error, but found none")
 	}
@@ -73,9 +85,12 @@ func TestBogusBlogHeader(t *testing.T) {
 func TestBlogFormat(t *testing.T) {
 
 	// fake-site
-	site := New("", "")
+	site, err := New("", "", "")
+	if err != nil {
+		t.Fatalf("error creating site: %s", err.Error())
+	}
 
-	_, err := NewBlogEntry("_test/blog_entry/bogus-format.txt", site)
+	_, err = NewBlogEntry("_test/blog_entry/bogus-format.txt", site)
 	if err == nil {
 		t.Errorf("we expected an error, but found none")
 	}
