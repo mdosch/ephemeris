@@ -74,39 +74,6 @@ func mkdirIfMissing(path string) {
 	}
 }
 
-// getRecentPosts fetches the most recent N posts from our collection
-// of entries.  It is used to render the partial/sidebar.
-//
-// We moved this routine into its own function for cleanliness, although
-// it is only called once.
-func getRecentPosts(posts []ephemeris.BlogEntry, count int) []ephemeris.BlogEntry {
-
-	// The return-value
-	var recent []ephemeris.BlogEntry
-
-	// Sort the list of posts by date.
-	sort.Slice(posts, func(i, j int) bool {
-		a := posts[i].Date
-		b := posts[j].Date
-		return a.Before(b)
-	})
-
-	// We want to include at-max `count` posts.
-	//
-	// But of course if this is a new blog there might
-	// be fewer than that present.  Terminate early in
-	// that case.
-	c := 0
-	for c < len(posts) && c < count {
-		ent := posts[len(posts)-1-c]
-		recent = append(recent, ent)
-		c++
-	}
-
-	// All done
-	return recent
-}
-
 // loadTemplates returns a collection of all the templates we have
 // embedded within our application.
 //
@@ -883,16 +850,22 @@ func main() {
 	//
 	// Create an object to generate our blog from
 	//
-	site := ephemeris.New(config.Posts, config.Comments)
-
-	//
-	// Parse all the blog-posts in the site.
-	//
-	entries, err := site.Entries(config.Prefix)
+	site, err := ephemeris.New(config.Posts, config.Comments, config.Prefix)
 	if err != nil {
-		fmt.Printf("Failed to read blog-entries: %s\n", err.Error())
+		fmt.Printf("Failed to create site: %s\n", err.Error())
 		return
 	}
+
+	//
+	// Get all the entries, and the recent entries too.
+	//
+	entries := site.Entries()
+	recent := site.Recent(10)
+
+	//
+	// Show the number of blog-posts we processed.
+	//
+	fmt.Printf("Read %d blog posts.\n", len(entries))
 
 	//
 	// We can now load the collection of templates which we've stored
@@ -906,15 +879,6 @@ func main() {
 		fmt.Printf("Error loading embedded resources: %s\n", err.Error())
 		return
 	}
-
-	//
-	// We have a list of "recent" posts, which will be embedded in
-	// many of our output-pages, as a partial.  (i.e. sidebar)
-	//
-	// To avoid processing the entries too many times we'll get that
-	// list once here.
-	//
-	recent := getRecentPosts(entries, 10)
 
 	//
 	// We're going to run the page-generation in a series of threads

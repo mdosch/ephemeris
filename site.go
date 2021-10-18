@@ -26,6 +26,9 @@ type Ephemeris struct {
 	// Root is the source of our posts.
 	Root string
 
+	// BlogEntries holds the entries we've found
+	BlogEntries []BlogEntry
+
 	// CommentFiles holds the filenames of comments we've found.
 	CommentFiles []string
 
@@ -34,33 +37,71 @@ type Ephemeris struct {
 }
 
 // New creates a new site object.
-func New(directory string, commentPath string) *Ephemeris {
+func New(directory string, commentPath string, prefix string) (*Ephemeris, error) {
 
 	// Create object
-	x := &Ephemeris{Root: directory}
+	x := &Ephemeris{Root: directory, Prefix: prefix}
 
-	// Now we can find comments - by reading the given
-	// directory and adding each of them.
-	comments, err := ioutil.ReadDir(commentPath)
-	if err != nil {
-		return x
+	// If the comment-path is set we'll load comments
+	if commentPath != "" {
+
+		// Now we can find comments - by reading the given
+		// directory and adding each of them.
+		comments, err := ioutil.ReadDir(commentPath)
+		if err != nil {
+			return x, err
+		}
+
+		// Sort the comments, since we want to show them upon
+		// entries in the oldest->newest order.
+		sort.Slice(comments, func(i, j int) bool {
+			return comments[i].ModTime().Before(comments[j].ModTime())
+		})
+
+		// Save the (complete) path to each comment-file in our
+		// object, now they're sorted.
+		for _, f := range comments {
+
+			// By appending
+			x.CommentFiles = append(x.CommentFiles, filepath.Join(commentPath, f.Name()))
+		}
 	}
 
-	// Sort the comments, since we want to show them upon
-	// entries in the oldest->newest order.
-	sort.Slice(comments, func(i, j int) bool {
-		return comments[i].ModTime().Before(comments[j].ModTime())
-	})
+	var err error
 
-	// Save the (complete) path to each comment-file in our
-	// object, now they're sorted.
-	for _, f := range comments {
+	//
+	// Find the blog-posts, recursively.
+	//
+	if directory != "" {
+		err = filepath.Walk(directory,
+			func(path string, info os.FileInfo, err error) error {
 
-		// By appending
-		x.CommentFiles = append(x.CommentFiles, filepath.Join(commentPath, f.Name()))
+				// Error?  Then we're done.
+				if err != nil {
+					return err
+				}
+
+				// Ignore non-text files.
+				if !strings.HasSuffix(path, ".txt") {
+					return nil
+				}
+
+				// Parse the blog-post from the file.
+				out, err := NewBlogEntry(path, x)
+				if err != nil {
+					return fmt.Errorf("failed to parse %s - %s", path, err.Error())
+				}
+
+				// Store the result.
+				x.BlogEntries = append(x.BlogEntries, out)
+
+				// Continue walking.
+				return nil
+			})
 	}
 
-	return x
+	// Return the entries we found.
+	return x, err
 }
 
 // Entries returns the blog-entries contained within a site.  Note that
@@ -71,45 +112,36 @@ func New(directory string, commentPath string) *Ephemeris {
 // The entries are returned in a random-order, and contain a complete
 // copy of all the text in the entries.  This means that there is a reasonable
 // amount of memory overhead here.
-func (e *Ephemeris) Entries(prefix string) ([]BlogEntry, error) {
+func (e *Ephemeris) Entries() []BlogEntry {
+	return e.BlogEntries
+}
 
-	// Results
-	var results []BlogEntry
+// Recent returns the data about the most recent N entries from the
+// site
+func (e *Ephemeris) Recent(count int) []BlogEntry {
 
+	// The return-value
+	var recent []BlogEntry
+
+	// Sort the list of posts by date.
+	sort.Slice(e.BlogEntries, func(i, j int) bool {
+		a := e.BlogEntries[i].Date
+		b := e.BlogEntries[j].Date
+		return a.Before(b)
+	})
+
+	// We want to include at-max `count` posts.
 	//
-	// Save the prefix
-	//
-	e.Prefix = prefix
+	// But of course if this is a new blog there might
+	// be fewer than that present.  Terminate early in
+	// that case.
+	c := 0
+	for c < len(e.BlogEntries) && c < count {
+		ent := e.BlogEntries[len(e.BlogEntries)-1-c]
+		recent = append(recent, ent)
+		c++
+	}
 
-	//
-	// Find the blog-posts, recursively.
-	//
-	err := filepath.Walk(e.Root,
-		func(path string, info os.FileInfo, err error) error {
-
-			// Error?  Then we're done.
-			if err != nil {
-				return err
-			}
-
-			// Ignore non-text files.
-			if !strings.HasSuffix(path, ".txt") {
-				return nil
-			}
-
-			// Parse the blog-post from the file.
-			out, err := NewBlogEntry(path, e)
-			if err != nil {
-				return fmt.Errorf("failed to parse %s - %s", path, err.Error())
-			}
-
-			// Store the result.
-			results = append(results, out)
-
-			// Continue walking.
-			return nil
-		})
-
-	// Return the entries we found.
-	return results, err
+	// All done
+	return recent
 }
