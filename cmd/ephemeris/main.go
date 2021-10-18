@@ -84,11 +84,6 @@ func getRecentPosts(posts []ephemeris.BlogEntry, count int) []ephemeris.BlogEntr
 	// The return-value
 	var recent []ephemeris.BlogEntry
 
-	// If there aren't too many posts then return them as-is.
-	if len(posts) <= count {
-		return posts
-	}
-
 	// Sort the list of posts by date.
 	sort.Slice(posts, func(i, j int) bool {
 		a := posts[i].Date
@@ -96,9 +91,13 @@ func getRecentPosts(posts []ephemeris.BlogEntry, count int) []ephemeris.BlogEntr
 		return a.Before(b)
 	})
 
-	// Build up the given number of posts.
+	// We want to include at-max `count` posts.
+	//
+	// But of course if this is a new blog there might
+	// be fewer than that present.  Terminate early in
+	// that case.
 	c := 0
-	for c < count {
+	for c < len(posts) && c < count {
 		ent := posts[len(posts)-1-c]
 		recent = append(recent, ent)
 		c++
