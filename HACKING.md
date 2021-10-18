@@ -1,6 +1,6 @@
 # Hacking
 
-This document briefly discusses how you'd make changes to the output pages.  In short there are is no support for themes, and all generated pages are made via a series of embedded template-files.
+This document briefly discusses how you'd make changes to the output pages.  In short there are is no support for themes, and all generated pages are made via a series of embedded template-files contained within the application itself.
 
 If you wish to change the look/feel of the generated file you'll need to look in the `data/` directory beneath `cmd/ephemeris`.
 

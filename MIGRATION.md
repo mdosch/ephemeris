@@ -5,7 +5,7 @@ As with `chronicle` the input to this program is a directory containing a series
 There are two changes in this project which you will have to adjust to:
 
 * The format of blog-posts became more strict.
-* The naming of the comment-files bacme more strict.
+* The naming of the comment-files became more strict.
 
 
 ## Blog Posts

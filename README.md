@@ -64,9 +64,7 @@ You can install from source, by cloning the repository and running:
     go build .
     go install .
 
-Or you can visit the [release page](https://github.com/skx/evalfilter/releases) to download a binary.
-
-**NOTE**: As a result of #16 you'll need to use golang version 1.16 or higher.
+Or you can visit the [release page](https://github.com/skx/evalfilter/releases) to download a binary for your system.
 
 
 # Blog Generation
@@ -96,6 +94,9 @@ The generated output will be placed in the `output/` directory.  The configurati
   * This is the path to the directory containing your comments.
   * If this is empty then no comments will be read/inserted into your output
   * See [COMMENTS.md](COMMENTS.md) for a discussion of comments.
+* `OutputPath`
+  * The path beneath which all output content should be written.
+  * This defaults to `output/`.
 * `Prefix`
   * This is the URL-prefix used to generate all links.
 
