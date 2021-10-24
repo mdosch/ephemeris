@@ -29,6 +29,9 @@ type Config struct {
 	// Output is the path to which we write our output files.
 	OutputPath string
 
+	// ThemePath contains the directory to look in for theme-files
+	ThemePath string
+
 	// AddComments is used to determine whether there is an 'add comment'
 	// form shown on the most recent entry.
 	AddComments bool
