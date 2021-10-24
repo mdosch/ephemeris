@@ -824,7 +824,6 @@ func main() {
 	// Command-line arguments which are accepted.
 	//
 	confFile := flag.String("config", "ephemeris.json", "The path to our configuration file.")
-	themeDir := flag.String("theme", "", "The path to a set of theme-templates")
 	allowComments := flag.Bool("allow-comments", true, "Enable comments to be added to the most recent entry.")
 
 	//
@@ -864,7 +863,6 @@ func main() {
 	// Preserve comment setting, and theme-path
 	//
 	config.AddComments = *allowComments
-	config.ThemePath = *themeDir
 
 	//
 	// Create an object to generate our blog from
