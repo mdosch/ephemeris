@@ -210,6 +210,52 @@ func loadTemplates() (*template.Template, error) {
 	return t, err
 }
 
+// exportDefaultTheme iterates over each of our template-resources and writes
+// them to the specified path.
+func exportDefaultTheme(prefix string) {
+
+	// Now load all the templates
+	err := fs.WalkDir(TEMPLATES, ".", func(pth string, d fs.DirEntry, err error) error {
+		// Error?  Then return it
+		if err != nil {
+			return err
+		}
+
+		// Directory?  Make sure it exists.
+		if d.IsDir() {
+			if d.Name() != "data" {
+				tmp := path.Join(prefix, d.Name())
+				fmt.Printf("Creating directory %s\n", tmp)
+				mkdirIfMissing(tmp)
+			}
+			return nil
+		}
+
+		// Where we write the data to
+		fileOut := path.Join(prefix, strings.TrimPrefix(pth, "data/"))
+
+		// Copy file contents..
+		fmt.Printf("Copying %s to %s\n", pth, fileOut)
+
+		// Get the file contents.
+		data, err := TEMPLATES.ReadFile(pth)
+		if err != nil {
+			return err
+		}
+
+		// Write the contents
+		err = ioutil.WriteFile(fileOut, data, 0644)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+
+	if err != nil {
+		fmt.Printf("Error exporting theme:%s\n", err.Error())
+	}
+}
+
 // outputTags writes out the tag-specific pages.
 //
 // First of all build up a list of tags, then render
@@ -823,13 +869,22 @@ func main() {
 	//
 	// Command-line arguments which are accepted.
 	//
-	confFile := flag.String("config", "ephemeris.json", "The path to our configuration file.")
 	allowComments := flag.Bool("allow-comments", true, "Enable comments to be added to the most recent entry.")
+	confFile := flag.String("config", "ephemeris.json", "The path to our configuration file.")
+	exportTheme := flag.String("export-theme", "", "Export the default theme to a local directory.")
 
 	//
 	// Parse the flags.
 	//
 	flag.Parse()
+
+	//
+	// Exporting the theme?
+	//
+	if *exportTheme != "" {
+		exportDefaultTheme(*exportTheme)
+		return
+	}
 
 	//
 	// Record our start-time
