@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="alternate" type="application/rss+xml" href="{{.Prefix}}index.rss" title="RSS feed for {{.Prefix}}">
-    {{template "data/inc/css.tmpl"}}
+    {{template "inc/css.tmpl"}}
   </head>
   <body>
     <div class="header">
@@ -14,7 +14,7 @@
         <a href="/about/">About</a>
         <a href="/archive/">Archive</a>
         <a href="/tags/">Tags</a>
-        {{template "data/inc/rss.tmpl"}}
+        {{template "inc/rss.tmpl"}}
       </div>
     </div>
     <p>&nbsp;</p>
@@ -22,11 +22,11 @@
       <tr><td width="10%" id="indent"></td>
         <td id="content">
           {{range .Entries}}
-          {{template "data/inc/blog_post.tmpl" .}}
+          {{template "inc/blog_post.tmpl" .}}
           {{end}}
         </td>
         <td width="20%" id="sidebar">
-          {{template "data/inc/recent_posts.tmpl" .}}
+          {{template "inc/recent_posts.tmpl" .}}
         </td>
       </tr>
     </table>

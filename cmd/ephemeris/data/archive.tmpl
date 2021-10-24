@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="alternate" type="application/rss+xml" href="{{range $i, $t := .}}{{if $i }}{{else}}{{.Prefix}}{{end}}{{end}}index.rss" title="RSS feed for {{range $i, $t := .}}{{if $i }}{{else}}{{.Prefix}}{{end}}{{end}}">
-    {{template "data/inc/css.tmpl"}}
+    {{template "inc/css.tmpl"}}
   </head>
   <body>
     <div class="header">
@@ -14,7 +14,7 @@
         <a href="/about/">About</a>
         <a class="active" href="/archive/">Archive</a>
         <a href="/tags/">Tags</a>
-        {{template "data/inc/rss.tmpl"}}
+        {{template "inc/rss.tmpl"}}
       </div>
     </div>
     <p>&nbsp;</p>
@@ -39,7 +39,7 @@
         <!-- hack -->
         {{range $i, $t := .}}
         {{if $i }} {{else}}
-          {{template "data/inc/recent_posts.tmpl" .}}
+          {{template "inc/recent_posts.tmpl" .}}
           {{end}}
         {{end}}
         </td>
