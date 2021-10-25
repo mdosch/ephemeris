@@ -1,3 +1,22 @@
+## Chronicle History
+
+The chronicle blog compiler started life as a simple project, but grew in complexity over time.  Part of the reason the complexity grew was because the project was very flexible:
+
+* It would read a whole bunch flat files, each of which contained a single blog-post.
+* Each parsed post would then be inserted into an SQLite database.
+* Using this intermediary database a series of plugins would each execute in turn:
+  * The plugins would run SQL-queries to extract posts of interest.
+    * For example building a tag-cloud.
+    * For example building an archive-view.
+    * For example outputting the front-page (10 most recent posts) & associated RSS-feed.
+* Once complete the SQLite database would be destroyed.
+
+My expectation was that the use of an intermediary SQLite database would allow content to be generated in a very flexible and extensible fashion, however over time it became apparent that I didn't _actually_ need generation to be very flexible!  Most blogs look the same, if you have tags, archives, etc, then that's enough.
+
+In short this project was born to __replace__ chronicle, and perform the things I actually need, rather than what I _suspected_ I might want.
+
+
+
 # Migration from chronicle
 
 As with `chronicle` the input to this program is a directory containing a series of blog-posts, along with a path from which to load static-comments.
