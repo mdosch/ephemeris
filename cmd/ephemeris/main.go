@@ -119,6 +119,11 @@ func loadTemplates() (*template.Template, error) {
 			return (strings.ToLower(in))
 		},
 
+		// Prefix of the blog - i.e. URL to prepend to links
+		"PREFIX": func() string {
+			return config.Prefix
+		},
+
 		// Date used on "recent posts"
 		"RECENT_POST_DATE": func(d time.Time) string {
 			year, month, day := d.Date()
@@ -305,9 +310,6 @@ func outputTags(posts []ephemeris.BlogEntry, recentPosts []ephemeris.BlogEntry) 
 		// Tag contains the name of the tag.
 		Tag string
 
-		// Prefix contains the site URL-prefix
-		Prefix string
-
 		// Entries holds entries having the given tag
 		Entries []ephemeris.BlogEntry
 
@@ -320,7 +322,6 @@ func outputTags(posts []ephemeris.BlogEntry, recentPosts []ephemeris.BlogEntry) 
 	//
 	var pageData TagPage
 	pageData.RecentPosts = recentPosts
-	pageData.Prefix = config.Prefix
 
 	//
 	// Create a per-page tag-template
@@ -395,12 +396,10 @@ func outputTags(posts []ephemeris.BlogEntry, recentPosts []ephemeris.BlogEntry) 
 	//
 	type TagCloudPage struct {
 		Tags        []TagMap
-		Prefix      string
 		RecentPosts []ephemeris.BlogEntry
 	}
 	var tagCloud TagCloudPage
 	tagCloud.RecentPosts = recentPosts
-	tagCloud.Prefix = config.Prefix
 
 	//
 	// Now we have a sorted list of unique tag-names we can build up
@@ -474,9 +473,6 @@ func outputArchive(posts []ephemeris.BlogEntry, recentPosts []ephemeris.BlogEntr
 		// Month contains the month we're covering.
 		Month string
 
-		// Prefix contains the URL-prefix of the site.
-		Prefix string
-
 		// Entries holds the entries in the given year/month
 		Entries []ephemeris.BlogEntry
 
@@ -489,7 +485,6 @@ func outputArchive(posts []ephemeris.BlogEntry, recentPosts []ephemeris.BlogEntr
 	//
 	var pageData PageData
 	pageData.RecentPosts = recentPosts
-	pageData.Prefix = config.Prefix
 
 	//
 	// Create a per-page output
@@ -561,7 +556,6 @@ func outputArchive(posts []ephemeris.BlogEntry, recentPosts []ephemeris.BlogEntr
 
 	type ArchiveIndex struct {
 		Year        string
-		Prefix      string
 		Data        []ArchiveCount
 		RecentPosts []ephemeris.BlogEntry
 	}
@@ -620,7 +614,7 @@ func outputArchive(posts []ephemeris.BlogEntry, recentPosts []ephemeris.BlogEntr
 	// For each year we add the data
 	//
 	for _, year := range years {
-		ai = append(ai, ArchiveIndex{Year: year, Data: mappy[year], RecentPosts: recentPosts, Prefix: config.Prefix})
+		ai = append(ai, ArchiveIndex{Year: year, Data: mappy[year], RecentPosts: recentPosts})
 	}
 
 	//
@@ -660,9 +654,6 @@ func outputIndex(posts []ephemeris.BlogEntry, recentPosts []ephemeris.BlogEntry)
 		// RecentPosts has the same data, but for
 		// the side-bar.  It is redundant.
 		RecentPosts []ephemeris.BlogEntry
-
-		// Prefix to the site
-		Prefix string
 	}
 
 	//
@@ -676,7 +667,6 @@ func outputIndex(posts []ephemeris.BlogEntry, recentPosts []ephemeris.BlogEntry)
 	var pageData Recent
 	pageData.Entries = recentPosts
 	pageData.RecentPosts = recentPosts
-	pageData.Prefix = config.Prefix
 
 	//
 	// Create the output file.
@@ -717,9 +707,6 @@ func outputRSS(posts []ephemeris.BlogEntry, recentPosts []ephemeris.BlogEntry) e
 		// RecentPosts has the same data, but for
 		// the side-bar.  It is redundant.
 		RecentPosts []ephemeris.BlogEntry
-
-		// Prefix contains the URL-prefix to the site
-		Prefix string
 	}
 
 	//
@@ -733,7 +720,6 @@ func outputRSS(posts []ephemeris.BlogEntry, recentPosts []ephemeris.BlogEntry) e
 	var pageData Recent
 	pageData.Entries = recentPosts
 	pageData.RecentPosts = recentPosts
-	pageData.Prefix = config.Prefix
 
 	//
 	// Create the output file.
@@ -773,9 +759,6 @@ func outputEntries(posts []ephemeris.BlogEntry, recentPosts []ephemeris.BlogEntr
 		// Should we display the add-comment form for this post?
 		AddComment bool
 
-		// Prefix for the site
-		Prefix string
-
 		// CGI link
 		CommentAPI string
 
@@ -794,7 +777,6 @@ func outputEntries(posts []ephemeris.BlogEntry, recentPosts []ephemeris.BlogEntr
 
 	// The site prefix, and the link to the CGI form for
 	// comment-submission.
-	pageData.Prefix = config.Prefix
 	pageData.CommentAPI = config.CommentAPI
 
 	//
