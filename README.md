@@ -17,13 +17,17 @@
 
 # Ephemeris
 
-`ephemeris` is a golang cli-application which will generate a blog from a collection of static text-files, complete with:
+`ephemeris` is a golang CLI-application which will generate a blog from a collection of static text-files, complete with:
 
-* Archive-view.
+* An archive-view.
+  * Showing posts by year, and month.
 * Comment support.
   * See [COMMENTS.md](COMMENTS.md) for more details on the setup required.
-* Tag-cloud.
-* RSS feed.
+* A tag-cloud.
+  * Containing all tags, and a list of posts using a specified tag.
+* An RSS feed.
+  * Containing the most recent ten posts.
+  * Full text is included in the feed.
 
 The project was primarily written to generate [my own blog](https://blog.steve.fi/), which was previously generated with the perl-based [chronicle blog compiler](https://steve.fi/Software/chronicle/) - if you've used `chronicle` you may consult the [brief notes on migration](MIGRATION.md).
 
@@ -41,15 +45,19 @@ Or if you just wish to install the binary:
 
     $ go install github.com/skx/ephemeris/cmd/ephemeris@latest
 
-Finally you can find precompiled binaries available for many systems upon the [release page](https://github.com/skx/evalfilter/releases).
+Alternatively you may find precompiled binaries available for many systems upon the [release page](https://github.com/skx/evalfilter/releases).
 
 
 
 
 # Blog Generation
 
-The application has only a couple of configuration values, which must be setup
-in the `ephemeris.json` file:
+A blog is generated from two things:
+
+* A series of blog-posts, stored beneath a given directory.
+* An optional set of comments, which are plaintext files associated with a given blog-post.
+
+To build/generate/create your blog you need to create a configuration file that contains the appropriate directories.  The configuration file is assumed to be named `ephemeris.json` in the current-directory, and a sample configuration file would look like this:
 
         {
           "Comments":   "./comments/",
@@ -58,13 +66,13 @@ in the `ephemeris.json` file:
           "Prefix":     "http://blog.steve.fi/"
         }
 
-Assuming you have that configuration file in the current directory, then you may simply run the command to compile and generate your blog:
+Once you have a configuration file simply run the command to compile and generate your blog:
 
     $ ephemeris
 
 As expected the generated output will be placed beneath the `output/` directory.  The possible configuration-keys in the JSON file are:
 
-* `Posts`
+* `Posts` - **Mandatory**
   * This is the path to the directory containing your blog-posts.
   * This directory will be searched recursively for content.
 * `CommentAPI`
@@ -76,8 +84,8 @@ As expected the generated output will be placed beneath the `output/` directory.
   * See [COMMENTS.md](COMMENTS.md) for a discussion of comments.
 * `OutputPath`
   * The path beneath which all output content should be written.
-  * This defaults to `output/`.
-* `Prefix`
+  * This defaults to `output/` if not specified.
+* `Prefix` - **Mandatory**
   * This is the URL-prefix used to generate all links.
 * `ThemePath`
   * This is the path to a local theme you're using, if you don't wish to use the default theme embedded within the binary.
