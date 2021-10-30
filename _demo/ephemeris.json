@@ -1,6 +1,6 @@
 {
-    "Posts": "data/",
-    "Comments": "comments/",
+    "PostsPath": "data/",
+    "CommentsPath": "comments/",
     "Prefix": "http://localhost:8000/",
     "OutputPath": "output/",
     "ThemePath": "theme/"

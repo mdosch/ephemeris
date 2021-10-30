@@ -889,11 +889,22 @@ func main() {
 	if config.OutputPath == "" {
 		config.OutputPath = "output"
 	}
-	if config.Posts == "" {
-		config.Posts = "data/"
+	if config.PostsPath == "" {
+
+		// Migration of legacy key-name
+		if config.Posts != "" {
+			config.PostsPath = config.Posts
+		} else {
+			config.PostsPath = "data/"
+		}
 	}
-	if config.Comments == "" {
-		config.Comments = "comments/"
+	if config.CommentsPath == "" {
+		// Migration of legacy key-name
+		if config.Comments != "" {
+			config.CommentsPath = config.Comments
+		} else {
+			config.CommentsPath = "comments/"
+		}
 	}
 
 	//
@@ -904,7 +915,7 @@ func main() {
 	//
 	// Create an object to generate our blog from
 	//
-	site, err := ephemeris.New(config.Posts, config.Comments, config.Prefix)
+	site, err := ephemeris.New(config.PostsPath, config.CommentsPath, config.Prefix)
 	if err != nil {
 		fmt.Printf("Failed to create site: %s\n", err.Error())
 		return

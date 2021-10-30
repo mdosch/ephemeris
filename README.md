@@ -60,10 +60,10 @@ A blog is generated from two things:
 To build/generate/create your blog you need to create a configuration file that contains the appropriate directories.  The configuration file is assumed to be named `ephemeris.json` in the current-directory, and a sample configuration file would look like this:
 
         {
-          "Comments":   "./comments/",
-          "OutputPath": "./output/",
-          "Posts":      "./posts/",
-          "Prefix":     "http://blog.steve.fi/"
+          "CommentsPath":  "./comments/",
+          "OutputPath":    "./output/",
+          "PostsPath":     "./posts/",
+          "Prefix":        "http://blog.steve.fi/"
         }
 
 Once you have a configuration file simply run the command to compile and generate your blog:
@@ -72,13 +72,13 @@ Once you have a configuration file simply run the command to compile and generat
 
 As expected the generated output will be placed beneath the `output/` directory.  The possible configuration-keys in the JSON file are:
 
-* `Posts` - **Mandatory**
+* `PostsPath` - **Mandatory**
   * This is the path to the directory containing your blog-posts.
   * This directory will be searched recursively for content.
 * `CommentAPI`
   * The URL of the CGI script to receive comments, this is used in the add-comment form.
     * See [COMMENTS.md](COMMENTS.md) for a discussion of comments.
-* `Comments`
+* `CommentsPath`
   * This is the path to the directory containing your comments.
   * If this is empty then no comments will be read/inserted into your output
   * See [COMMENTS.md](COMMENTS.md) for a discussion of comments.
