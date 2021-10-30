@@ -13,7 +13,12 @@ import (
 // is launched.
 type Config struct {
 	// Posts holds the directory beneath which we can find blog-posts.
+	//
+	// Depreciated in favour of `PostsPath`
 	Posts string
+
+	// PostsPath contains the path to the users' blog-posts
+	PostsPath string
 
 	// Prefix is the URL-prefix of the generated site, for example
 	// https://blog.steve.fi/
@@ -24,10 +29,17 @@ type Config struct {
 	CommentAPI string
 
 	// Comments points to a directory containing comment-files.
+	// Depreciated in favour of `CommentPath`
 	Comments string
+
+	// The path to the directory containing comments.
+	CommentsPath string
 
 	// Output is the path to which we write our output files.
 	OutputPath string
+
+	// ThemePath contains the directory to look in for theme-files
+	ThemePath string
 
 	// AddComments is used to determine whether there is an 'add comment'
 	// form shown on the most recent entry.

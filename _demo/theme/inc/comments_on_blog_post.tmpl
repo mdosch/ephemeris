@@ -1,0 +1,20 @@
+{{ $length := len .CommentData }} {{ if eq $length 0 }}{{ else }}
+<h2 id="comments" name="comments">Comments on this entry</h2>
+{{end}}
+{{range .CommentData}}
+<div class="comment">
+  <div class="commentheader">
+   <table>
+   <tr><td width="32">
+           <img alt="icon" width="32" height="32" src="{{.Icon}}" alt="user-icon"></td>
+       <td>{{.Author}} {{COMMENT_POST_DATE .Date}}<br/>
+           {{if .Link}}<a href="{{.Link}}" rel="nofollow">{{.Link}}</a>{{end}}
+       </td>
+   </tr>
+   </table>
+  </div>
+  <div class="commentbody">
+   {{.Body}}
+  </div>
+</div>
+{{end}}

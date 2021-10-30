@@ -64,10 +64,10 @@ You may then regenerate your blog via:
 Where you'd configure `ephemeris.json` to read:
 
      {
-       "Posts":      "./data/",
-       "Comments":   "./comments/",
-       "Prefix":     "http://my.blog.site/",
-       "CommentAPI": "http://my.blog.site/cgi-bin/comments.cgi"
+       "PostsPath":    "./data/",
+       "CommentsPath": "./comments/",
+       "Prefix":       "http://my.blog.site/",
+       "CommentAPI":   "http://my.blog.site/cgi-bin/comments.cgi"
      }
 
 This will ensure that the comments saved by your web-server into the comments directory are included in the (re)generated blog.

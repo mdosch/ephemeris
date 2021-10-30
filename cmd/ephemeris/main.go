@@ -22,6 +22,8 @@ import (
 	"flag"
 	"fmt"
 	"html"
+	"io/fs"
+	"io/ioutil"
 	"net/url"
 	"os"
 	"path"
@@ -117,6 +119,11 @@ func loadTemplates() (*template.Template, error) {
 			return (strings.ToLower(in))
 		},
 
+		// Prefix of the blog - i.e. URL to prepend to links
+		"PREFIX": func() string {
+			return config.Prefix
+		},
+
 		// Date used on "recent posts"
 		"RECENT_POST_DATE": func(d time.Time) string {
 			year, month, day := d.Date()
@@ -137,60 +144,121 @@ func loadTemplates() (*template.Template, error) {
 	})
 
 	//
-	// Open our embedded tree - handling both subdirectories
+	// We're either going to walk a theme-directory, which is
+	// a local directory hierarchy, or we're going to walk
+	// the embedded resources.
 	//
-	inp := []string{"data", "data/inc"}
-	for _, pth := range inp {
+	//
+	// Default to the embedded resources
+	var arg fs.FS
+	arg = TEMPLATES
 
-		//
-		// Read the contents of the directory
-		//
-		fis, err := TEMPLATES.ReadDir(pth)
-		if err != nil {
-			return nil, err
-		}
-
-		//
-		// For each embedded resource
-		//
-		for _, fi := range fis {
-
-			//
-			// Skip non-files.  This works because
-			// we have:
-			//
-			//   data/foo.bar
-			//   data/foo.tmpl
-			//   data/inc
-			//   data/inc/blah.blah
-			//
-			// Only the third entry there `data/inc` is a directory
-			// and contains no period in its name.
-			//
-			if !strings.Contains(fi.Name(), ".") {
-				continue
-			}
-
-			//
-			// Get the contents of the file.
-			//
-			data, err := TEMPLATES.ReadFile(path.Join(pth, fi.Name()))
-			if err != nil {
-				return nil, err
-			}
-
-			//
-			// Add the data + template
-			//
-			t = t.New(path.Join(pth, fi.Name()))
-			t, err = t.Parse(string(data))
-			if err != nil {
-				return nil, err
-			}
-		}
+	// But if we have a path then use that.
+	if config.ThemePath != "" {
+		arg = os.DirFS(config.ThemePath)
 	}
 
-	return t, nil
+	// Now load all the templates
+	err := fs.WalkDir(arg, ".", func(pth string, d fs.DirEntry, err error) error {
+		// Error?  Then return it
+		if err != nil {
+			return err
+		}
+
+		// Directory?  Ignore it.
+		if d.IsDir() {
+			return nil
+		}
+
+		//
+		// Contents of the template we're loading.
+		//
+		var data []byte
+
+		// Get the contents of the file.
+		//
+		// Either from the local-path
+		if config.ThemePath != "" {
+
+			// Complete path
+			complete := path.Join(config.ThemePath, pth)
+
+			// Read the file contents
+			data, err = ioutil.ReadFile(complete)
+			if err != nil {
+				return err
+			}
+		} else {
+
+			// Or from the embedded resource.
+			data, err = TEMPLATES.ReadFile(pth)
+			if err != nil {
+				return err
+			}
+
+			// However if we're loading from the
+			// embedded resource we need to strip
+			// the "data/" prefix.
+			pth = strings.TrimPrefix(pth, "data/")
+		}
+
+		// Add the data + template
+		t = t.New(pth)
+		t, err = t.Parse(string(data))
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	return t, err
+}
+
+// exportDefaultTheme iterates over each of our template-resources and writes
+// them to the specified path.
+func exportDefaultTheme(prefix string) {
+
+	// Now load all the templates
+	err := fs.WalkDir(TEMPLATES, ".", func(pth string, d fs.DirEntry, err error) error {
+		// Error?  Then return it
+		if err != nil {
+			return err
+		}
+
+		// Directory?  Make sure it exists.
+		if d.IsDir() {
+			if d.Name() != "data" {
+				tmp := path.Join(prefix, d.Name())
+				fmt.Printf("Creating directory %s\n", tmp)
+				mkdirIfMissing(tmp)
+			}
+			return nil
+		}
+
+		// Where we write the data to
+		fileOut := path.Join(prefix, strings.TrimPrefix(pth, "data/"))
+
+		// Copy file contents..
+		fmt.Printf("Copying %s to %s\n", pth, fileOut)
+
+		// Get the file contents.
+		data, err := TEMPLATES.ReadFile(pth)
+		if err != nil {
+			return err
+		}
+
+		// Write the contents
+		err = ioutil.WriteFile(fileOut, data, 0644)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+
+	if err != nil {
+		fmt.Printf("Error exporting theme:%s\n", err.Error())
+	}
 }
 
 // outputTags writes out the tag-specific pages.
@@ -242,9 +310,6 @@ func outputTags(posts []ephemeris.BlogEntry, recentPosts []ephemeris.BlogEntry) 
 		// Tag contains the name of the tag.
 		Tag string
 
-		// Prefix contains the site URL-prefix
-		Prefix string
-
 		// Entries holds entries having the given tag
 		Entries []ephemeris.BlogEntry
 
@@ -257,7 +322,6 @@ func outputTags(posts []ephemeris.BlogEntry, recentPosts []ephemeris.BlogEntry) 
 	//
 	var pageData TagPage
 	pageData.RecentPosts = recentPosts
-	pageData.Prefix = config.Prefix
 
 	//
 	// Create a per-page tag-template
@@ -293,7 +357,7 @@ func outputTags(posts []ephemeris.BlogEntry, recentPosts []ephemeris.BlogEntry) 
 		//
 		// Render the template into our file.
 		//
-		err = tmpl.ExecuteTemplate(output, "data/tag_page.tmpl", pageData)
+		err = tmpl.ExecuteTemplate(output, "tag_page.tmpl", pageData)
 		if err != nil {
 			return err
 		}
@@ -332,12 +396,10 @@ func outputTags(posts []ephemeris.BlogEntry, recentPosts []ephemeris.BlogEntry) 
 	//
 	type TagCloudPage struct {
 		Tags        []TagMap
-		Prefix      string
 		RecentPosts []ephemeris.BlogEntry
 	}
 	var tagCloud TagCloudPage
 	tagCloud.RecentPosts = recentPosts
-	tagCloud.Prefix = config.Prefix
 
 	//
 	// Now we have a sorted list of unique tag-names we can build up
@@ -363,7 +425,7 @@ func outputTags(posts []ephemeris.BlogEntry, recentPosts []ephemeris.BlogEntry) 
 	//
 	// Render the template into our file.
 	//
-	err = tmpl.ExecuteTemplate(ti, "data/tags.tmpl", tagCloud)
+	err = tmpl.ExecuteTemplate(ti, "tags.tmpl", tagCloud)
 	if err != nil {
 		return err
 	}
@@ -411,9 +473,6 @@ func outputArchive(posts []ephemeris.BlogEntry, recentPosts []ephemeris.BlogEntr
 		// Month contains the month we're covering.
 		Month string
 
-		// Prefix contains the URL-prefix of the site.
-		Prefix string
-
 		// Entries holds the entries in the given year/month
 		Entries []ephemeris.BlogEntry
 
@@ -426,7 +485,6 @@ func outputArchive(posts []ephemeris.BlogEntry, recentPosts []ephemeris.BlogEntr
 	//
 	var pageData PageData
 	pageData.RecentPosts = recentPosts
-	pageData.Prefix = config.Prefix
 
 	//
 	// Create a per-page output
@@ -475,7 +533,7 @@ func outputArchive(posts []ephemeris.BlogEntry, recentPosts []ephemeris.BlogEntr
 		//
 		// Render the template into it.
 		//
-		err = tmpl.ExecuteTemplate(output, "data/archive_page.tmpl", pageData)
+		err = tmpl.ExecuteTemplate(output, "archive_page.tmpl", pageData)
 		if err != nil {
 			return err
 		}
@@ -498,7 +556,6 @@ func outputArchive(posts []ephemeris.BlogEntry, recentPosts []ephemeris.BlogEntr
 
 	type ArchiveIndex struct {
 		Year        string
-		Prefix      string
 		Data        []ArchiveCount
 		RecentPosts []ephemeris.BlogEntry
 	}
@@ -557,7 +614,7 @@ func outputArchive(posts []ephemeris.BlogEntry, recentPosts []ephemeris.BlogEntr
 	// For each year we add the data
 	//
 	for _, year := range years {
-		ai = append(ai, ArchiveIndex{Year: year, Data: mappy[year], RecentPosts: recentPosts, Prefix: config.Prefix})
+		ai = append(ai, ArchiveIndex{Year: year, Data: mappy[year], RecentPosts: recentPosts})
 	}
 
 	//
@@ -571,7 +628,7 @@ func outputArchive(posts []ephemeris.BlogEntry, recentPosts []ephemeris.BlogEntr
 	//
 	// Render the template into our file.
 	//
-	err = tmpl.ExecuteTemplate(ar, "data/archive.tmpl", ai)
+	err = tmpl.ExecuteTemplate(ar, "archive.tmpl", ai)
 	if err != nil {
 		return err
 	}
@@ -597,9 +654,6 @@ func outputIndex(posts []ephemeris.BlogEntry, recentPosts []ephemeris.BlogEntry)
 		// RecentPosts has the same data, but for
 		// the side-bar.  It is redundant.
 		RecentPosts []ephemeris.BlogEntry
-
-		// Prefix to the site
-		Prefix string
 	}
 
 	//
@@ -613,7 +667,6 @@ func outputIndex(posts []ephemeris.BlogEntry, recentPosts []ephemeris.BlogEntry)
 	var pageData Recent
 	pageData.Entries = recentPosts
 	pageData.RecentPosts = recentPosts
-	pageData.Prefix = config.Prefix
 
 	//
 	// Create the output file.
@@ -626,7 +679,7 @@ func outputIndex(posts []ephemeris.BlogEntry, recentPosts []ephemeris.BlogEntry)
 	//
 	// Render the template into our file.
 	//
-	err = tmpl.ExecuteTemplate(output, "data/index.tmpl", pageData)
+	err = tmpl.ExecuteTemplate(output, "index.tmpl", pageData)
 	if err != nil {
 		return err
 	}
@@ -654,9 +707,6 @@ func outputRSS(posts []ephemeris.BlogEntry, recentPosts []ephemeris.BlogEntry) e
 		// RecentPosts has the same data, but for
 		// the side-bar.  It is redundant.
 		RecentPosts []ephemeris.BlogEntry
-
-		// Prefix contains the URL-prefix to the site
-		Prefix string
 	}
 
 	//
@@ -670,7 +720,6 @@ func outputRSS(posts []ephemeris.BlogEntry, recentPosts []ephemeris.BlogEntry) e
 	var pageData Recent
 	pageData.Entries = recentPosts
 	pageData.RecentPosts = recentPosts
-	pageData.Prefix = config.Prefix
 
 	//
 	// Create the output file.
@@ -683,7 +732,7 @@ func outputRSS(posts []ephemeris.BlogEntry, recentPosts []ephemeris.BlogEntry) e
 	//
 	// Render the template into it.
 	//
-	err = tmpl.ExecuteTemplate(rss, "data/index.rss", pageData)
+	err = tmpl.ExecuteTemplate(rss, "index.rss", pageData)
 	if err != nil {
 		return err
 	}
@@ -710,9 +759,6 @@ func outputEntries(posts []ephemeris.BlogEntry, recentPosts []ephemeris.BlogEntr
 		// Should we display the add-comment form for this post?
 		AddComment bool
 
-		// Prefix for the site
-		Prefix string
-
 		// CGI link
 		CommentAPI string
 
@@ -731,7 +777,6 @@ func outputEntries(posts []ephemeris.BlogEntry, recentPosts []ephemeris.BlogEntr
 
 	// The site prefix, and the link to the CGI form for
 	// comment-submission.
-	pageData.Prefix = config.Prefix
 	pageData.CommentAPI = config.CommentAPI
 
 	//
@@ -783,7 +828,7 @@ func outputEntries(posts []ephemeris.BlogEntry, recentPosts []ephemeris.BlogEntr
 		//
 		// Render the template into it.
 		//
-		err = tmpl.ExecuteTemplate(output, "data/entry.tmpl", pageData)
+		err = tmpl.ExecuteTemplate(output, "entry.tmpl", pageData)
 		if err != nil {
 			return err
 		}
@@ -806,13 +851,22 @@ func main() {
 	//
 	// Command-line arguments which are accepted.
 	//
-	confFile := flag.String("config", "ephemeris.json", "The path to our configuration file.")
 	allowComments := flag.Bool("allow-comments", true, "Enable comments to be added to the most recent entry.")
+	confFile := flag.String("config", "ephemeris.json", "The path to our configuration file.")
+	exportTheme := flag.String("export-theme", "", "Export the default theme to a local directory.")
 
 	//
 	// Parse the flags.
 	//
 	flag.Parse()
+
+	//
+	// Exporting the theme?
+	//
+	if *exportTheme != "" {
+		exportDefaultTheme(*exportTheme)
+		return
+	}
 
 	//
 	// Record our start-time
@@ -835,22 +889,33 @@ func main() {
 	if config.OutputPath == "" {
 		config.OutputPath = "output"
 	}
-	if config.Posts == "" {
-		config.Posts = "data/"
+	if config.PostsPath == "" {
+
+		// Migration of legacy key-name
+		if config.Posts != "" {
+			config.PostsPath = config.Posts
+		} else {
+			config.PostsPath = "data/"
+		}
 	}
-	if config.Comments == "" {
-		config.Comments = "comments/"
+	if config.CommentsPath == "" {
+		// Migration of legacy key-name
+		if config.Comments != "" {
+			config.CommentsPath = config.Comments
+		} else {
+			config.CommentsPath = "comments/"
+		}
 	}
 
 	//
-	// Preserve comment setting
+	// Preserve comment setting, and theme-path
 	//
 	config.AddComments = *allowComments
 
 	//
 	// Create an object to generate our blog from
 	//
-	site, err := ephemeris.New(config.Posts, config.Comments, config.Prefix)
+	site, err := ephemeris.New(config.PostsPath, config.CommentsPath, config.Prefix)
 	if err != nil {
 		fmt.Printf("Failed to create site: %s\n", err.Error())
 		return
