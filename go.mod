@@ -3,7 +3,6 @@ module github.com/skx/ephemeris
 go 1.16
 
 require (
-	github.com/chris-ramon/douceur v0.2.0 // indirect
 	github.com/microcosm-cc/bluemonday v1.0.16 // indirect
 	github.com/russross/blackfriday v1.6.0 // indirect
 	github.com/sergi/go-diff v1.2.0 // indirect
@@ -17,6 +16,5 @@ require (
 	github.com/skx/headerfile v0.1.0
 	github.com/sourcegraph/annotate v0.0.0-20160123013949-f4cad6c6324d // indirect
 	github.com/sourcegraph/syntaxhighlight v0.0.0-20170531221838-bd320f5d308e // indirect
-	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9 // indirect
-	golang.org/x/net v0.0.0-20211015210444-4f30a5c0130f // indirect
+	golang.org/x/net v0.0.0-20211105192438-b53810dc28af // indirect
 )
