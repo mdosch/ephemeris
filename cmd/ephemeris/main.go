@@ -14,7 +14,6 @@
 //
 // The way that the system is setup the most recent post will allow
 // comments to be submitted upon it - all others will be read-only.
-//
 package main
 
 import (
@@ -23,7 +22,6 @@ import (
 	"fmt"
 	"html"
 	"io/fs"
-	"io/ioutil"
 	"net/url"
 	"os"
 	"path"
@@ -43,6 +41,7 @@ import (
 //
 
 // TEMPLATES holds our embedded template resources.
+//
 //go:embed data/**
 var TEMPLATES embed.FS
 
@@ -89,7 +88,6 @@ func mkdirIfMissing(path string) {
 // ESCAPE           - Escape HTML-text for RSS_generation too.
 // RECENT_POST_DATE - The date format used for the "most recent entries" list in the sidebar.
 // BLOG_POST_DATE   - The format used in the index/archive/tag-view.
-//
 func loadTemplates() (*template.Template, error) {
 
 	// Create a helper-template, with no name.
@@ -184,7 +182,7 @@ func loadTemplates() (*template.Template, error) {
 			complete := path.Join(config.ThemePath, pth)
 
 			// Read the file contents
-			data, err = ioutil.ReadFile(complete)
+			data, err = os.ReadFile(complete)
 			if err != nil {
 				return err
 			}
@@ -249,7 +247,7 @@ func exportDefaultTheme(prefix string) {
 		}
 
 		// Write the contents
-		err = ioutil.WriteFile(fileOut, data, 0644)
+		err = os.WriteFile(fileOut, data, 0644)
 		if err != nil {
 			return err
 		}
@@ -640,7 +638,6 @@ func outputArchive(posts []ephemeris.BlogEntry, recentPosts []ephemeris.BlogEntr
 //
 // We don't need to sort, or limit ourselves here, because we only use
 // the "most recent posts" we've already discovered.
-//
 func outputIndex(posts []ephemeris.BlogEntry, recentPosts []ephemeris.BlogEntry) error {
 
 	mkdirIfMissing(config.OutputPath)
@@ -693,7 +690,6 @@ func outputIndex(posts []ephemeris.BlogEntry, recentPosts []ephemeris.BlogEntry)
 //
 // We don't need to sort, or limit ourselves here, because we only use
 // the "most recent posts" we've already discovered.
-//
 func outputRSS(posts []ephemeris.BlogEntry, recentPosts []ephemeris.BlogEntry) error {
 
 	mkdirIfMissing(config.OutputPath)

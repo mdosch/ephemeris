@@ -5,12 +5,10 @@
 //
 // Each post will have a small header to include tags, date, title,
 // and will be transformed into a simple site.
-//
 package ephemeris
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
@@ -47,7 +45,7 @@ func New(directory string, commentPath string, prefix string) (*Ephemeris, error
 
 		// Now we can find comments - by reading the given
 		// directory and adding each of them.
-		comments, err := ioutil.ReadDir(commentPath)
+		comments, err := os.ReadDir(commentPath)
 		if err != nil {
 			return x, err
 		}
@@ -55,7 +53,9 @@ func New(directory string, commentPath string, prefix string) (*Ephemeris, error
 		// Sort the comments, since we want to show them upon
 		// entries in the oldest->newest order.
 		sort.Slice(comments, func(i, j int) bool {
-			return comments[i].ModTime().Before(comments[j].ModTime())
+			iInfo, _ := comments[i].Info()
+			jInfo, _ := comments[j].Info()
+			return iInfo.ModTime().Before(jInfo.ModTime())
 		})
 
 		// Save the (complete) path to each comment-file in our
