@@ -66,7 +66,7 @@ Now `Blah`, and `Publish` are explicitly prohibited.
 
 ## Comment Files
 
-In the past comments would be written to files with names such as:
+In the past, comments would be written to files with names such as:
 
 * `you_ve_had_this_coming_since_the_day_you_arrived.html.23-November-2008-13:18:09`
 * `you_ve_had_this_coming_since_the_day_you_arrived.html.23-November-2008-13:20:39`
@@ -92,6 +92,6 @@ See [COMMENTS.md](COMMENTS.md) for a discussion on comment-setup.
 
 ## Migration Summary
 
-To migration first of all try pointing the configuration file at your existing entries, ignoring comments.  You'll need to fix the `Date:` header of your posts  until the errors go away.
+Start by pointing the configuration file at your existing entries, ignoring comments.  You'll need to fix the `Date:` header of your posts  until the errors go away.
 
 Once you've done that you can now rename the comments, if you use them.
