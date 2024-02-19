@@ -9,7 +9,7 @@
 * [Blog Generation](#blog-generation)
    * [Blog Format](#blog-format)
 * [Demo Blog](#demo-blog)
-* [Hacking](#hacking)
+* [Theming](#theming)
 * [Feedback](#feedback)
 
 
